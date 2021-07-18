@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include "common.h"
+#include "common.h"
 // common.h is a third party library, I think I need to find it in my host linux os
 
 // invoke this with command line arguments equal to the amount of cores your cpu has
