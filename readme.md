@@ -1,0 +1,4 @@
+
+
+ideas:
+- create a compiler
