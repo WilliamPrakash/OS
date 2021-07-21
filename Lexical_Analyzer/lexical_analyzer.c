@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
 	//i = 0;
 	// Parse through array
-	while(i < 20){
+	/*while(i < 20){
 		if(arr[i] == NULL){
 			break;
 		}
@@ -55,7 +55,44 @@ int main(int argc, char *argv[]) {
 			printf("It works\n");
 		}
 		i++;
+	}*/
+
+		// counts for different types of tokens???
+
+	// IDEA: add brackets to a stack data structure to ensure equal opening/closing brackets
+	// or just use two arrays, one for ({[ and one for ]})
+	char leftBrackets[10];
+	int leftBracCount = 0;
+	char rightBrackets[10];
+	int rightBracCount = 0;
+	i = 0;
+	// Parse through array
+	while(i < 20){
+		if(arr[i] == NULL){
+			break;
+		}
+		if( (strcmp(arr[i], "(") == 0) || (strcmp(arr[i], "[") == 0) || (strcmp(arr[i], "{") == 0) ) {
+			//printf("Memory address of %s: %p\n", arr[i], &arr[i]);
+			//printf("It works\n");
+			rightBrackets[rightBracCount] = *arr[i];
+			rightBracCount++;
+		} else if ( (strcmp(arr[i], ")") == 0) || (strcmp(arr[i], "]") == 0) || (strcmp(arr[i], "}") == 0) ) {
+			leftBrackets[leftBracCount] = *arr[i];
+			leftBracCount++;
+		}else{}
+		i++;
 	}
 
+	// print contents of right and left bracket char arrays
+	if(leftBracCount != rightBracCount){
+		printf("Inequal amount of left and right brackets\n");
+	} else {
+		i = 0;
+		while(i < leftBracCount){
+			printf("LB:  %c", leftBrackets[i]);
+			printf("RB: %c\n", rightBrackets[i]);
+			i++;
+		}
+	}
 	return 0;
 }
