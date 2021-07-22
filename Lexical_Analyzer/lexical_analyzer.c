@@ -20,6 +20,10 @@ int main(int argc, char *argv[]) {
 	}
 	removeNewLineCharacter(buffer);
 
+	// FOUND ERROR WITH SEGMENTATION FAULT: error arises if only one string is passed in
+	// the below tokenizing code breaks cause there is no space in a single string!
+	// need an if statement to check the amount of args?
+
 	// Initialize array to hold tokenized buffer
 	const char s[2] = " ";	// tokenize buffer based on a blank space
 	char *token;	// this probably isn't memory safe, stack overflow vulnerability
@@ -43,21 +47,7 @@ int main(int argc, char *argv[]) {
 	// counts for different types of tokens???
 	
 	// IDEA: add brackets to a stack data structure to ensure equal opening/closing brackets
-
-	//i = 0;
-	// Parse through array
-	/*while(i < 20){
-		if(arr[i] == NULL){
-			break;
-		}
-		if( (strcmp(arr[i], "(") == 0)) { 
-			printf("Memory address of %s: %p\n", arr[i], &arr[i]);
-			printf("It works\n");
-		}
-		i++;
-	}*/
-
-		// counts for different types of tokens???
+	// counts for different types of tokens???
 
 	// IDEA: add brackets to a stack data structure to ensure equal opening/closing brackets
 	// or just use two arrays, one for ({[ and one for ]})
@@ -67,7 +57,7 @@ int main(int argc, char *argv[]) {
 	int rightBracCount = 0;
 	i = 0;
 	// Parse through array
-	while(i < 20){
+	while(i < 10){
 		if(arr[i] == NULL){
 			break;
 		}
