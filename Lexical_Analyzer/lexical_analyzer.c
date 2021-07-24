@@ -19,28 +19,12 @@ int main(int argc, char *argv[]) {
 		*ptr = '\0';
 	}
 	removeNewLineCharacter(buffer);
-
-	// FOUND ERROR WITH SEGMENTATION FAULT: error arises if only one string is passed in
-	// the below tokenizing code breaks cause there is no space in a single string!
-	// need an if statement to check the amount of args?
-
-	// Initialize array to hold tokenized buffer
-	const char s[2] = " ";	// tokenize buffer based on a blank space
-	char *token;	// this probably isn't memory safe, stack overflow vulnerability
-	/*token = strtok(buffer, s);
-	int i = 0;
-	char *arr[20];
-	arr[i] = token;
-	int arrCount = 0;*/
 	
+	// Check to make sure more than one string has been inputted to be tokenized -> fixes segmentation fault error
 	int spaceCount = 0;
 	void checkForSpace(char *ptr){
 		while((ptr != NULL) && (*ptr != '\n')){
-			//int res = strcmp(*ptr, ' ');
-			//printf("contents of ptr: %d\n", res);
-			//if(strcmp(ptr, " ") == 0){
-			if(*ptr == ' '){
-				printf("adding to spaceCount...\n");
+			if(*ptr == ' '){	// dereferences pointer ptr (get value at ptr)
 				spaceCount += 1;
 				break;	// just need to ensure at least one space is there, actual amount doesn't matter
 			}
@@ -48,18 +32,27 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	checkForSpace(buffer);
-	//printf("space count: %d\n", spaceCount);
+	
 	if(spaceCount <= 0){
 		printf("You need more than one string to tokenize\n");
 		return 1;
 	}
 	
+	// Initialize array to hold tokenized buffer
+	const char s[2] = " ";	// tokenize buffer by space
+	char *token;	// stack overflow vulnerability???
 	token = strtok(buffer, s);
         int i = 0;
         char *arr[20];
         arr[i] = token;
         int arrCount = 0;
 	i = 0;
+
+	// need a way to tokenize not just based on space, that wouldn't account for this: if(statement){    -> it would get treated as one
+	// maybe add every single individual char to array, then tokenize
+	// it would iterate over each array element, if it was a number, it would keep going until it hit a non number
+	// it would add the number ^^^ as it's own whole string to an array
+
 	// Tokenize buffer after assigning the first element to arr[0]
 	while(token != NULL){
 		token = strtok(NULL, s);
@@ -71,17 +64,14 @@ int main(int argc, char *argv[]) {
 		arr[i] = token;
 	}
 
-	// counts for different types of tokens???
-	
-	// IDEA: add brackets to a stack data structure to ensure equal opening/closing brackets
-	// counts for different types of tokens???
-
-	// IDEA: add brackets to a stack data structure to ensure equal opening/closing brackets
-	// or just use two arrays, one for ({[ and one for ]})
+	// IDEA: initialize char arrays for all different types of tokens
+	// I'll need a way to tell the order of tokens going forward to make a compiler
 	char leftBrackets[10];
 	int leftBracCount = 0;
 	char rightBrackets[10];
 	int rightBracCount = 0;
+	char operators[10];
+	int opCt = 0;
 	i = 0;
 	// Parse through array
 	while(i < 10){
@@ -89,14 +79,15 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		if( (strcmp(arr[i], "(") == 0) || (strcmp(arr[i], "[") == 0) || (strcmp(arr[i], "{") == 0) ) {
-			//printf("Memory address of %s: %p\n", arr[i], &arr[i]);
-			//printf("It works\n");
-			rightBrackets[rightBracCount] = *arr[i];
-			rightBracCount++;
-		} else if ( (strcmp(arr[i], ")") == 0) || (strcmp(arr[i], "]") == 0) || (strcmp(arr[i], "}") == 0) ) {
 			leftBrackets[leftBracCount] = *arr[i];
 			leftBracCount++;
-		}else{}
+		} else if ( (strcmp(arr[i], ")") == 0) || (strcmp(arr[i], "]") == 0) || (strcmp(arr[i], "}") == 0) ) {
+			rightBrackets[rightBracCount] = *arr[i];
+			rightBracCount++;
+		} else if( (strcmp(arr[i], "+") == 0 )|| (strcmp(arr[i], "-") == 0) || (strcmp(arr[i], "*") == 0) || (strcmp(arr[i], "/") == 0)  ) {
+			operators[opCt] = *arr[i];
+			opCt++;
+		} else{}
 		i++;
 	}
 
@@ -106,10 +97,18 @@ int main(int argc, char *argv[]) {
 	} else {
 		i = 0;
 		while(i < leftBracCount){
-			printf("LB:  %c", leftBrackets[i]);
+			printf("LB:  %c\n", leftBrackets[i]);
 			printf("RB: %c\n", rightBrackets[i]);
 			i++;
 		}
 	}
+	i = 0;
+	printf("Operators passed: ");
+	while(i < opCt){
+		printf("%c ",operators[i] );
+		i++;
+	}
+
+	printf("\n");
 	return 0;
 }
