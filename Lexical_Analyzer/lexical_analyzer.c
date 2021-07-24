@@ -27,12 +27,39 @@ int main(int argc, char *argv[]) {
 	// Initialize array to hold tokenized buffer
 	const char s[2] = " ";	// tokenize buffer based on a blank space
 	char *token;	// this probably isn't memory safe, stack overflow vulnerability
-	token = strtok(buffer, s);
+	/*token = strtok(buffer, s);
 	int i = 0;
 	char *arr[20];
 	arr[i] = token;
-	int arrCount = 0;
-
+	int arrCount = 0;*/
+	
+	int spaceCount = 0;
+	void checkForSpace(char *ptr){
+		while((ptr != NULL) && (*ptr != '\n')){
+			//int res = strcmp(*ptr, ' ');
+			//printf("contents of ptr: %d\n", res);
+			//if(strcmp(ptr, " ") == 0){
+			if(*ptr == ' '){
+				printf("adding to spaceCount...\n");
+				spaceCount += 1;
+				break;	// just need to ensure at least one space is there, actual amount doesn't matter
+			}
+			ptr++;
+		}
+	}
+	checkForSpace(buffer);
+	//printf("space count: %d\n", spaceCount);
+	if(spaceCount <= 0){
+		printf("You need more than one string to tokenize\n");
+		return 1;
+	}
+	
+	token = strtok(buffer, s);
+        int i = 0;
+        char *arr[20];
+        arr[i] = token;
+        int arrCount = 0;
+	i = 0;
 	// Tokenize buffer after assigning the first element to arr[0]
 	while(token != NULL){
 		token = strtok(NULL, s);
