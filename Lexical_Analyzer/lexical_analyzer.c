@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
 	removeNewLineCharacter(buffer);
 	
 	// Check to make sure more than one string has been inputted to be tokenized -> fixes segmentation fault error
-	/*
 	int spaceCount = 0;
 	void checkForSpace(char *ptr){
 		while((ptr != NULL) && (*ptr != '\n')){
@@ -38,10 +37,8 @@ int main(int argc, char *argv[]) {
 		printf("You need more than one string to tokenize\n");
 		return 1;
 	}
-	*/
 	
 	// Initialize array to hold tokenized buffer
-	/*
 	const char s[2] = " ";	// tokenize buffer by space
 	char *token;	// stack overflow vulnerability???
 	token = strtok(buffer, s);
@@ -50,44 +47,13 @@ int main(int argc, char *argv[]) {
         arr[i] = token;
         int arrCount = 0;
 	i = 0;
-	*/
-
-	// tokenizing v2 -> iterate through every single thing
 	
-	// TODO: need to find a way to get all the characters in buffer, cause this shit isn't working
-
-	int i = 0;
-	char *token;
-	const char s[2] = "";	// I don't this is working;
-	token = strtok(buffer, s);
-	char *arr[20];
-	arr[i] = token;
-	//arr[i] = *buffer[i];
-	while(token != NULL ) {
-		token = strtok(NULL, s);
-		if(token == NULL) { break;  };
-		i++;
-		arr[i] = token;
-	}
-	// this is only printing . a, I think there is an issue with the tokenizing while loop above
-	i = 0;
-	int ct = 0;
-	printf("All characters in arr: \n");
-	while(arr[i] != NULL){
-		//if( (arr[i + ct] == "") ) { break;  }; 
-		//printf(".  %c  ", *arr[i + ct]);
-		printf(". %c ", *arr[i]);
-		//++ct;
-		i++;
-	}
-	printf("\n");
 
 	// need a way to tokenize not just based on space, that wouldn't account for this: if(statement){    -> it would get treated as one
 	// maybe add every single individual char to array, then tokenize
 	// it would iterate over each array element, if it was a number, it would keep going until it hit a non number
 	// it would add the number ^^^ as it's own whole string to an array
 
-	/*
 	i = 0;
 	// Tokenize buffer after assigning the first element to arr[0]
 	while(token != NULL){
@@ -144,8 +110,6 @@ int main(int argc, char *argv[]) {
 		printf("%c ",operators[i] );
 		i++;
 	}
-
-	*/
 
 	printf("\n");
 	return 0;
