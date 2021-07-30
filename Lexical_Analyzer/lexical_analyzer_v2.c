@@ -30,12 +30,11 @@ int main(int argc, char *argv[]) {
 	size_t numbersSize = 32;
 	numbers = (int *)malloc(numbersSize * sizeof(int));
 	char *strings;
-	size_t stringsSize = 32;
+	size_t stringsSize = 100;
 	strings = (char *)malloc(stringsSize * sizeof(char));
-	int k = 0;
+	int k = 0;	// global value to always keep track of the end of strings array -> rename???
 	int l = 0;
 	int num;
-	char str;
 	// iterate through buffer, parsing ints, strings, brackets
 	for(i = 0; i < bufCt; i++) {
 		if(isdigit(buffer[i])) {
@@ -59,25 +58,32 @@ int main(int argc, char *argv[]) {
 				i++;
 				j++;
 			}
-			sscanf(temp, "%c", &str);
-			strings[l] = str;
+			// loop through temp to add the characters to strings
+			// this probably should be a global value to always keep track of the end of strings array
+			j = 0;
+			while(temp[j] != '\0') {
+				strings[k] = temp[j];
+				k++;
+				j++;
+			}
+			k++;
+			//strings[k] = "$";	// denotes the end of a string
 			memset(temp, 0, sizeof temp);
 			l++;
+			// I think I need to add all strings to the same char array, and separate each "string" by a space
 		}
+		i++;
 	}
 
-	/*printf("Contents of temp ");
-	for(i = 0; temp[i] != '\0'; i++){
-		printf(" %c  ", temp[i]);
-	}*/
 	printf("\n");
 	for(i = 0; i < k; i++ ){
 		printf("Num in members: %d", numbers[i]);
 	}
-	printf("str: \n", str);
-	printf("\n");
-	for(i = 0; i < l; i++) {
-		printf("String in strings %c", strings[i]);
+	i = 0;
+	printf("\nContents of strings array: ");
+	while(strings[i] != '\0') {
+		printf(" %c", strings[i]);
+		i++;
 	}
 
 
