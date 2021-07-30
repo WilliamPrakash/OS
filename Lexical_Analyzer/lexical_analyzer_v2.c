@@ -29,15 +29,15 @@ int main(int argc, char *argv[]) {
 	int *numbers;
 	size_t numbersSize = 32;
 	numbers = (int *)malloc(numbersSize * sizeof(int));
-	//char *strings;
-	//size_t stringsSize = 32;
-	//strings = (char *)malloc(stringsSize * sizeof(char));
+	char *strings;
+	size_t stringsSize = 32;
+	strings = (char *)malloc(stringsSize * sizeof(char));
 	int k = 0;
-	//int l = 0;
+	int l = 0;
 	int num;
-	//char str;
+	char str;
 	// iterate through buffer, parsing ints, strings, brackets
-	for(i = 0; i < bufCt; i++){
+	for(i = 0; i < bufCt; i++) {
 		if(isdigit(buffer[i])) {
 			int j = 0;
 			while(isdigit(buffer[i])) {
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
 			memset(temp, 0, sizeof temp);
 			k++;
 		}
-		/*if(ischar(buffer[i])) {
+		if(isalpha(buffer[i])) {
 			int j = 0;
-			while(ischar(buffer[i])) {
+			while(isalpha(buffer[i])) {
 				temp[j] = buffer[i];
 				i++;
 				j++;
@@ -63,22 +63,22 @@ int main(int argc, char *argv[]) {
 			strings[l] = str;
 			memset(temp, 0, sizeof temp);
 			l++;
-		}*/
+		}
 	}
 
 	/*printf("Contents of temp ");
 	for(i = 0; temp[i] != '\0'; i++){
 		printf(" %c  ", temp[i]);
 	}*/
-	printf("\n");;
+	printf("\n");
 	for(i = 0; i < k; i++ ){
 		printf("Num in members: %d", numbers[i]);
 	}
-
-	/*printf("\n");
+	printf("str: \n", str);
+	printf("\n");
 	for(i = 0; i < l; i++) {
 		printf("String in strings %c", strings[i]);
-	}*/
+	}
 
 
 
