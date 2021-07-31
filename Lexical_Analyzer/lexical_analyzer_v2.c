@@ -32,11 +32,13 @@ int main(int argc, char *argv[]) {
 	char *strings;
 	size_t stringsSize = 100;
 	strings = (char *)malloc(stringsSize * sizeof(char));
-	int k = 0;	// global value to always keep track of the end of strings array -> rename???
-	int l = 0;
+	//int k = 0;
+	int numCt = 0;
+	int strCt = 0;	// this isn't actually a string count, it's a char count
 	int num;
 	// iterate through buffer, parsing ints, strings, brackets
 	for(i = 0; i < bufCt; i++) {
+		// Grabs all numbers
 		if(isdigit(buffer[i])) {
 			int j = 0;
 			while(isdigit(buffer[i])) {
@@ -44,40 +46,38 @@ int main(int argc, char *argv[]) {
 				i++;
 				j++;
 			}
+			i--;	// this is necessary cause the for loop increments i, this prevents numbers from being skipped
 			// convert temp to an int and add it to numbers array
 			sscanf(temp, "%d", &num);
-			numbers[k] = num;
-			// clear temp 
+			numbers[numCt] = num;
 			memset(temp, 0, sizeof temp);
-			k++;
+			numCt++;
 		}
-		if(isalpha(buffer[i])) {
+		// Grabs all 'strings'
+		else if(isalpha(buffer[i])) {
 			int j = 0;
 			while(isalpha(buffer[i])) {
 				temp[j] = buffer[i];
 				i++;
 				j++;
 			}
-			// loop through temp to add the characters to strings
-			// this probably should be a global value to always keep track of the end of strings array
+			i--;
+			// loop through temp to add the characters to strings char array
 			j = 0;
 			while(temp[j] != '\0') {
-				strings[k] = temp[j];
-				k++;
+				strings[strCt] = temp[j];
+				strCt++;
 				j++;
 			}
-			k++;
-			//strings[k] = "$";	// denotes the end of a string
+			// TODO: add a symbol after a string to denote end of a string -> space?
+			//strings[k] = "$";
 			memset(temp, 0, sizeof temp);
-			l++;
-			// I think I need to add all strings to the same char array, and separate each "string" by a space
 		}
-		i++;
 	}
 
-	printf("\n");
-	for(i = 0; i < k; i++ ){
-		printf("Num in members: %d", numbers[i]);
+	printf("Num in numbers: \n");
+	for(i = 0; i < numCt; i++ ){
+		printf(" %d ", numbers[i]);
 	}
 	i = 0;
 	printf("\nContents of strings array: ");
