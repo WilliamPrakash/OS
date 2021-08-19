@@ -1,12 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-//#include <pthread.h>	// not even using this... yet
+//#include <pthread.h>	// compile with: '-lpthread' when you start using pthread library
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-//  NOTE: compile this with -lpthread flag
-// fork() lets you create and run a copy of the original process
-// exec() lets you run a different process in place of the copy of the original process
+#include <dirent.h>
 
 int main(int argv, char *argc[]) {
 	char *buffer;
@@ -19,7 +17,7 @@ int main(int argv, char *argc[]) {
         	int i;
 	        getline(&buffer, &bufsize, stdin);
         
-        	void removeNewLineCharacter(char *ptr){		// removes newline from buffer
+        	void removeNewLineCharacter(char *ptr){
                 	while( (ptr != NULL) && (*ptr != '\n') ){
                         	++ptr;
 	                }
@@ -28,30 +26,28 @@ int main(int argv, char *argc[]) {
 	        removeNewLineCharacter(buffer);
 
         	i = 0;
-       		 /*while(buffer[i] != '\n') {
-                	printf(" %c ", buffer[i]);
-	                i++;
-        	}*/
-
-	        if(strcmp(buffer, "ls") == 0) {			
-	                printf("ls command recognized\n");
+	        if(strcmp(buffer, "ls") == 0) {
+	        	DIR *dir;	// represents a directory stream (high-level interface)
+			struct dirent *file; // struct is like an array, but can hold multiple different data types
+			dir = opendir(".");
+			while((file = readdir(dir)) != NULL) {
+				printf(" %s  ", file->d_name);	// an arrow operator in c allows access to elements in structures and unions
+				// it's used with a pointer variable pointing to a structure or union
+			}
+			printf("\n");
+			closedir(dir);
 		}
-		
+
 		if(strcmp(buffer, "create process") == 0) {
-			//printf("Main process pid: %d\n", (int) getpid());
-			int child = fork();	// returns an id of 0 to the child process -> different from pid?
+			int child = fork();
 			if(child < 0) {
 				fprintf(stderr, "fork failed\n");
 				exit(1);
 			} else if (child == 0) {
 				printf("hello from child process number %d\n", (int) getpid());
-				//sleep(1);
-				//kill(child, SIGTERM);
 				exit(0);
 			} else {
-				//int wc = wait(NULL);
 				wait(NULL);
-				//kill(child, SIGTERM);
 				printf("hello from parent process %d\n", (int) getpid());
 			}
 		}
