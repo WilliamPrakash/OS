@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	getline(&buffer, &bufsize, stdin);
 	int i = 0;
 	int bufCt = 0;
-	// iterate through buffer
+	//Iterate through buffer
 	printf("Contents of buffer: ");
 	for (i = 0; buffer[i] != '\0'; i++){
 		printf(" %c  ", buffer[i]);
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 	}
 	printf("\n");
 
-	// arrays for holding ints and letters
+	// Pointers for holding numbers, characters, and brackets
 	char *temp;
 	size_t tempSize = 32;
 	temp = (char *)malloc(tempSize * sizeof(char));
@@ -32,13 +32,19 @@ int main(int argc, char *argv[]) {
 	char *strings;
 	size_t stringsSize = 100;
 	strings = (char *)malloc(stringsSize * sizeof(char));
-	//int k = 0;
 	int numCt = 0;
 	int strCt = 0;	// this isn't actually a string count, it's a char count
 	int num;
-	// iterate through buffer, parsing ints, strings, brackets
+	//char *leftBrackets;
+	//size_t leftBracSize = 32;
+	//leftBrackets = (char *)malloc(leftBracSize * sizeof(char));
+	char leftBrackets[10] = {0,0,0}; // uninitialized variables can have unpredictable contents, do this to basically assign it values to overwrite
+	int leftBracCount = 0;
+	
+	// Iterate through buffer, parsing tokens: strings, numbers, and brackets
 	for(i = 0; i < bufCt; i++) {
 		// Grabs all numbers
+		// NOTE: this won't account for decimals
 		if(isdigit(buffer[i])) {
 			int j = 0;
 			while(isdigit(buffer[i])) {
@@ -73,6 +79,11 @@ int main(int argc, char *argv[]) {
 			//strings[k] = "$";
 			memset(temp, 0, sizeof temp);
 		}
+		else if( buffer[i] == '(') {
+                        leftBrackets[leftBracCount] = buffer[i];
+			//printf("( detected!!!\n");
+                        leftBracCount++;
+                }
 	}
 
 	printf("Num in numbers: \n");
@@ -85,7 +96,12 @@ int main(int argc, char *argv[]) {
 		printf(" %c", strings[i]);
 		i++;
 	}
-
+	i = 0;
+	printf("\nContents of leftBrackets array: ");
+	while(leftBrackets[i] != 0) {
+		printf(" %c", leftBrackets[i]);
+		i++;
+	}
 
 
 
