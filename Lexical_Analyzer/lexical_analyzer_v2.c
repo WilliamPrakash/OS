@@ -6,7 +6,6 @@
 #include <ctype.h>
 
 int main(int argc, char *argv[]) {
-	// memory safe way of getting input (puts it on heap, clear heap memory?)
 	printf("type a string to be tokenized: ");
 	char *buffer;
 	size_t bufsize = 32;
@@ -14,7 +13,7 @@ int main(int argc, char *argv[]) {
 	getline(&buffer, &bufsize, stdin);
 	int i = 0;
 	int bufCt = 0;
-	//Iterate through buffer
+	// Iterate through buffer to make sure everything inputted is in here
 	printf("Contents of buffer: ");
 	for (i = 0; buffer[i] != '\0'; i++){
 		printf(" %c  ", buffer[i]);
@@ -23,6 +22,7 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
 	// Pointers for holding numbers, characters, and brackets
+	// TODO: I really need a way to keep all this in one array, or at least a way to remember the order of everyting
 	char *temp;
 	size_t tempSize = 32;
 	temp = (char *)malloc(tempSize * sizeof(char));
@@ -35,13 +35,13 @@ int main(int argc, char *argv[]) {
 	int numCt = 0;
 	int strCt = 0;	// this isn't actually a string count, it's a char count
 	int num;
-	//char *leftBrackets;
-	//size_t leftBracSize = 32;
-	//leftBrackets = (char *)malloc(leftBracSize * sizeof(char));
-	char leftBrackets[10] = {0,0,0}; // uninitialized variables can have unpredictable contents, do this to basically assign it values to overwrite
+	char leftBrackets[10] = {0,0,0,0,0,0,0,0,0,0}; // uninitialized variables can have unpredictable contents, do this to basically assign it values to overwrite
+	char rightBrackets[10] = {0,0,0,0,0,0,0,0,0,0};
 	int leftBracCount = 0;
+	int rightBracCount = 0;
 	
-	// Iterate through buffer, parsing tokens: strings, numbers, and brackets
+	// Iterate through buffer, parsing every single char one at a time
+	// If it hits a number or english letter, it will keep going to get entire word/number
 	for(i = 0; i < bufCt; i++) {
 		// Grabs all numbers
 		// NOTE: this won't account for decimals
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 				i++;
 				j++;
 			}
-			i--;	// this is necessary cause the for loop increments i, this prevents numbers from being skipped
+			i--;	// decrement i cause it was incremented above ^^^
 			// convert temp to an int and add it to numbers array
 			sscanf(temp, "%d", &num);
 			numbers[numCt] = num;
@@ -75,15 +75,20 @@ int main(int argc, char *argv[]) {
 				strCt++;
 				j++;
 			}
-			// TODO: add a symbol after a string to denote end of a string -> space?
-			//strings[k] = "$";
+			strings[strCt] = '$';
+			strCt++;
 			memset(temp, 0, sizeof temp);
 		}
-		else if( buffer[i] == '(') {
+		// Grab all left brackets
+		else if( buffer[i] == '(' || buffer[i] == '[' || buffer[i] == '{') {
                         leftBrackets[leftBracCount] = buffer[i];
-			//printf("( detected!!!\n");
-                        leftBracCount++;
+    			leftBracCount++;
                 }
+		// Grab all right brackets
+		else if(buffer[i] == ')' || buffer[i] == ']' || buffer[i] == '}') {
+			rightBrackets[rightBracCount] = buffer[i];
+			rightBracCount++;
+		}
 	}
 
 	printf("Num in numbers: \n");
@@ -97,52 +102,25 @@ int main(int argc, char *argv[]) {
 		i++;
 	}
 	i = 0;
-	printf("\nContents of leftBrackets array: ");
+	printf("\nContents of Bracket arrays: ");
 	while(leftBrackets[i] != 0) {
 		printf(" %c", leftBrackets[i]);
 		i++;
 	}
-
-
-
-
-
-
-
-	// iterate through buffer checking input
-
-	// need a way to tokenize not just based on space, that wouldn't account for this: if(statement){    -> it would get treated as one
-	// maybe add every single individual char to array, then tokenize
-	// it would iterate over each array element, if it was a number, it would keep going until it hit a non number
-	// it would add the number ^^^ as it's own whole string to 
-
-	// IDEA: initialize char arrays for all different types of tokens
-	// I'll need a way to tell the order of tokens going forward to make a compiler
-	/*char leftBrackets[10];
-	int leftBracCount = 0;
-	char rightBrackets[10];
-	int rightBracCount = 0;
-	char operators[10];
-	int opCt = 0;
-	i = 0;
-	// Parse through array
-	while(i < 10){
-		if(arr[i] == NULL){
-			break;
-		}
-		if( (strcmp(arr[i], "(") == 0) || (strcmp(arr[i], "[") == 0) || (strcmp(arr[i], "{") == 0) ) {
-			leftBrackets[leftBracCount] = *arr[i];
-			leftBracCount++;
-		} else if ( (strcmp(arr[i], ")") == 0) || (strcmp(arr[i], "]") == 0) || (strcmp(arr[i], "}") == 0) ) {
-			rightBrackets[rightBracCount] = *arr[i];
-			rightBracCount++;
-		} else if( (strcmp(arr[i], "+") == 0 )|| (strcmp(arr[i], "-") == 0) || (strcmp(arr[i], "*") == 0) || (strcmp(arr[i], "/") == 0)  ) {
-			operators[opCt] = *arr[i];
-			opCt++;
-		} else{}
+	i = 0;	
+	while(rightBrackets[i] != 0) {
+		printf(" %c", rightBrackets[i]);
 		i++;
-	}*/
+	}
 
+	/*** Token Checking  ***/
+
+	// Check brackets:
+	// TODO: first check to see if len of right and left bracket arrays are equal
+	// then make sure they match up
+
+
+	/*************** END  ***************/
 	printf("\n");
 	return 0;
 }
