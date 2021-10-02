@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	} else if(argc >=1) {
 		printf("Arguments supplied: ");
-		int i = 0;
+		int i = 1;
 		while(argv[i] != NULL) {
 			printf(" %s ", argv[i]);
 			i++;
