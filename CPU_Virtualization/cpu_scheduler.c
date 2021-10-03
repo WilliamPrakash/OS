@@ -3,7 +3,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
-
+#include <time.h>
+void timer();
 int main(int argc, char *argv[]) {
 	int processList[10] = {0,0,0,0,0,0,0,0,0,0};
 
@@ -23,23 +24,11 @@ int main(int argc, char *argv[]) {
 			myargs[0] = strdup("./loop1");
 			myargs[1] = NULL;
 			execvp(myargs[0], myargs);
-			// as soon as execvp() gets executed, loop1 will keep running. It will not relinquish control to this program
-			// I can either program a line in there to relinquish it( yield() ), but that's not ideal for all code
-			// is there a way I can execute a program from here with a build in lifespan? like somehow execute it for a few seconds?
-			
-			// not going to reach this code until loop1 is done executing and relinquishes control back to this program
-			int stay = 1;
-			while(stay = 1){
-				kill(child1, SIGSTOP);
-				printf("stopped from child1. waiting 3 seconds to continue ./loop1");
-				sleep(3);
-				kill(child1, SIGCONT);
-				printf("loop1 resumed");
-				sleep(6);
-			}
+
 			exit(0);
 		// force childSpawner process to wait for process it created
 		} else {
+			timer(child1);
 			wait(NULL);
 			printf("hello from childSpawner, pid: %d\n", (int) getpid());
 			exit(0);
@@ -51,11 +40,21 @@ int main(int argc, char *argv[]) {
 		wait(NULL);
 		printf("hello from parent process %d\n", (int) getpid());
 		exit(0);
-	}
-	
-
+	}	
 
 	//exit(1);
 }
 
-
+// parent thread is running concurrently with the thread taken over by child1
+// I can have the parent force the child process to stop with this timer
+void timer(int pidToKill) {
+	printf("pid to kill: %d", pidToKill);
+	clock_t before, after;
+        before = clock();       // this gets the number of clock ticks that have elapsed since the program was launched
+        //printf("clock before: %f\n", t);
+        sleep(8);
+        after = clock();
+        double t1 = ( (double)(after-before) ) / CLOCKS_PER_SEC;
+        printf("clock after: %f\n", t1);
+	kill(pidToKill, SIGKILL);
+}
