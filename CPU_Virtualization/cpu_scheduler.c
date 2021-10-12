@@ -6,17 +6,20 @@
 #include <time.h>
 void timer();
 int main(int argc, char *argv[]) {
+	// TODO: turn processList into a global array that can be manipulated from multiple threads
 	int processList[10] = {0,0,0,0,0,0,0,0,0,0};
 
 	// spawn initial child process to then create more processes
 	printf("\n");
-	int childSpawner = fork();	// after this call, you have two processes executing this same code (i think)
+	int child0 = fork();
 	int i = 0;
-	if(childSpawner < 0) {
+	if(child0 < 0) {
 		fprintf(stderr, "fork failed\n");
 		exit(1);
-	} else if(childSpawner == 0) {
+	} else if(child0 == 0) {
 		// inside childSpawner process (forked process from main)
+		processList[i] = child0;
+		i++;
 		int child1 = fork();
 		if(child1 == 0) {
 			// inside child1 process (forked child from childSpawner)
@@ -26,32 +29,35 @@ int main(int argc, char *argv[]) {
 			execvp(myargs[0], myargs);
 
 			exit(0);
-		// force childSpawner process to wait for process it created
+		// call timer with parent process of child1 to prevent child1 from always executing
 		} else {
+			processList[i] = (int) getpid();
+			i++;
 			timer(child1);
 			wait(NULL);
-			printf("hello from childSpawner, pid: %d\n", (int) getpid());
+			//printf("hello from childSpawner, pid: %d\n", (int) getpid());
 			exit(0);
 		}
-
-		//exit(0);	// nothing is actually happening with this call! i get the same results with this commented and uncom
 	} else {
-		// parent process, force it to wait for child process
+		// Original parent process, force it to wait for child process
 		wait(NULL);
-		printf("hello from parent process %d\n", (int) getpid());
+		printf("Contents of processList[ ]: \n");
+		i = 0;
+		printf("%d\n", processList[0]);
+		while(processList[i] != 0) {
+			printf("%d  ", processList[i]);
+			i++;
+		}
 		exit(0);
 	}	
-
-	//exit(1);
 }
 
 // parent thread is running concurrently with the thread taken over by child1
 // I can have the parent force the child process to stop with this timer
 void timer(int pidToKill) {
-	printf("pid to kill: %d", pidToKill);
+	printf("pid to kill: %d\n", pidToKill);
 	clock_t before, after;
         before = clock();       // this gets the number of clock ticks that have elapsed since the program was launched
-        //printf("clock before: %f\n", t);
         sleep(8);
         after = clock();
         double t1 = ( (double)(after-before) ) / CLOCKS_PER_SEC;
