@@ -6,7 +6,11 @@
 #include <time.h>
 void timer();
 int main(int argc, char *argv[]) {
-	// TODO: turn processList into a global array that can be manipulated from multiple threads
+	// Processes are NOT the same as threads
+	// Processes are isolated and do not share emory with any other processes
+	// Thread is the segment of a process, which means a process can have multiple threads contained within one process
+	// Threads have 3 states: running, ready, blocked
+	// Threads do not isolate and share memory
 	int processList[10] = {0,0,0,0,0,0,0,0,0,0};
 
 	// spawn initial child process to then create more processes
@@ -18,21 +22,16 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	} else if(child0 == 0) {
 		// inside childSpawner process (forked process from main)
-		processList[i] = child0;
-		i++;
 		int child1 = fork();
 		if(child1 == 0) {
 			// inside child1 process (forked child from childSpawner)
 			char *myargs[2];
-			myargs[0] = strdup("./loop1");
+			myargs[0] = strdup("./tests/loop1");
 			myargs[1] = NULL;
 			execvp(myargs[0], myargs);
-
 			exit(0);
 		// call timer with parent process of child1 to prevent child1 from always executing
 		} else {
-			processList[i] = (int) getpid();
-			i++;
 			timer(child1);
 			wait(NULL);
 			//printf("hello from childSpawner, pid: %d\n", (int) getpid());
@@ -41,13 +40,6 @@ int main(int argc, char *argv[]) {
 	} else {
 		// Original parent process, force it to wait for child process
 		wait(NULL);
-		printf("Contents of processList[ ]: \n");
-		i = 0;
-		printf("%d\n", processList[0]);
-		while(processList[i] != 0) {
-			printf("%d  ", processList[i]);
-			i++;
-		}
 		exit(0);
 	}	
 }
