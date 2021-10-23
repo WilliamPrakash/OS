@@ -10,9 +10,6 @@ void* routine() {
         pthread_mutex_lock(&mutex);
         mails++;
         pthread_mutex_unlock(&mutex);
-        // read mails
-        // increment
-        // write mails
     }
 }
 
@@ -23,25 +20,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     if (pthread_create(&p2, NULL, &routine, NULL) != 0) {
-        return 2;
-    }
-    if (pthread_create(&p3, NULL, &routine, NULL) != 0) {
-        return 3;
-    }
-    if (pthread_create(&p4, NULL, &routine, NULL) != 0) {
-        return 4;
+        return 1;
     }
     if (pthread_join(p1, NULL) != 0) {
-        return 5;
+        return 1;
     }
     if (pthread_join(p2, NULL) != 0) {
-        return 6;
-    }
-    if (pthread_join(p3, NULL) != 0) {
-        return 7;
-    }
-    if (pthread_join(p4, NULL) != 0) {
-        return 8;
+        return 1;
     }
     pthread_mutex_destroy(&mutex);
     printf("Number of mails: %d\n", mails);

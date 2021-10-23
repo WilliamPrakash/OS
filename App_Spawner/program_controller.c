@@ -7,10 +7,16 @@
 void timer();
 int main(int argc, char *argv[]) {
 	// Processes are NOT the same as threads
-	// Processes are isolated and do not share emory with any other processes
-	// Thread is the segment of a process, which means a process can have multiple threads contained within one process
-	// Threads have 3 states: running, ready, blocked
-	// Threads do not isolate and share memory
+	// Processes are isolated and do not share emory with any other processes	
+
+
+	/****** Threads are for small tasks, processes for heavyweight tasks (basically the execution of applications)  *****/
+
+
+	// TODO: repurpose this code into an application creator/spawner
+
+
+
 	int processList[10] = {0,0,0,0,0,0,0,0,0,0};
 
 	// spawn initial child process to then create more processes
