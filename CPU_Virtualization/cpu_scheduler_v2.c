@@ -9,6 +9,7 @@
 //void *timer();
 void *test();
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cv;
 
 int main(int argc, char *argv[]) {
 	// Processes are NOT the same as threads
@@ -25,41 +26,39 @@ int main(int argc, char *argv[]) {
 	t1ct = pthread_create(&t1, NULL, test, (void*) message1);
 	t2ct = pthread_create(&t2, NULL, test, (void*) message2);
 
-	/***	make a loop here that iterates through	***/
-
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
 	printf("Thread 1 returns: %d\n", t1ct);
 	printf("Thread 2 returns: %d\n", t2ct);
-
+	
+	pthread_mutex_destroy(&mutex);
 	exit(0);
 }
 
 void *test() {
-	// TODO: need to find a way to suspend/resume a thread without the use of sleep and a loop -> pause() ?
-	// ^^^ also going to need a way to force an unlock
 	// obvious evolution of forever for loop is a queue
-	int i = 0;
-	while(1) {
-		// need to conditionally lock this I think
-		// then use pthread_mutex_trylock
-		pthread_mutex_lock(&mutex);
-		printf("locked\n");
-		int j = 0;
-		while(1){
-			if(j >= 2) {break;}
-			sleep(2);
-			j++;
-		}
-		pthread_mutex_unlock(&mutex);
-		printf("unlocked\n");
-		i++;
-		if(i >= 2) { break; };
-	}
+	pthread_cond_init(&cv, NULL);
+	//while(1) {
+		if(pthread_mutex_trylock(&mutex) == 0) {
+			pthread_mutex_lock(&mutex);
+			printf("mutex has been locked\nPerforming a task for 3 seconds...\n");
+			sleep(3);
+			pthread_mutex_unlock(&mutex);
+			printf("unlocked\n");
+			pthread_cond_signal(&cv);
+        	} else {
+			printf("pausing other thread while waiting for mutex to be unlocked\n");
+			pthread_cond_wait(&cv, &mutex); // this will wait for a signal from another thread
+			// ^^^ Equivalent to:
+			// pthread_mutex_unlock(&mutex)
+			// wait for signal on cv
+			// pthread_mutex_lock(&mutex)
+			printf("other thread has been resumed\n");
+        	}
+	//}
+	pthread_cond_destroy(&cv);
 }
-
-
 
 
 
