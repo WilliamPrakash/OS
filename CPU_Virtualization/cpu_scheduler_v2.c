@@ -6,8 +6,10 @@
 #include <time.h>
 #include <pthread.h>
 
-//void *timer();
-void *test();
+void *mutex_test();
+void *roll();
+void *timer();
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
 
@@ -18,25 +20,32 @@ int main(int argc, char *argv[]) {
 	// Threads have 3 states: running, ready, blocked
 	// Threads do not isolate and share memory
 	
-	pthread_t t1, t2;
-	char *message1 = "Thread 1";
-	char *message2 = "Thread 2";
-	int t1ct, t2ct;
+	pthread_t th[2];
+	int *res;
+	srand(time(NULL));
 
-	t1ct = pthread_create(&t1, NULL, test, (void*) message1);
-	t2ct = pthread_create(&t2, NULL, test, (void*) message2);
-
-	pthread_join(t1, NULL);
-	pthread_join(t2, NULL);
-
-	printf("Thread 1 returns: %d\n", t1ct);
-	printf("Thread 2 returns: %d\n", t2ct);
+	for(int i = 0; i < 2; i++) {
+		if(pthread_create(th + i, NULL, roll, NULL) != 0){
+			perror("Failed to create thread\n");
+			return 1;
+		}
+		printf("Thread %d created\n", i);
+	}
+	for(int i = 0; i < 2; i++) {
+		//if(pthread_join(th[i], NULL) != 0) {
+		if(pthread_join(th[i], (void**) &res) != 0) {
+                        // pthread_join waits for the thread specified in the first arg to terminate
+                        return 1;
+                }
+		printf("Result: %d\n", *res);
+		free(res);
+	}
 	
 	pthread_mutex_destroy(&mutex);
 	exit(0);
 }
 
-void *test() {
+void *mutex_test() {
 	// obvious evolution of forever for loop is a queue
 	pthread_cond_init(&cv, NULL);
 	//while(1) {
@@ -60,13 +69,18 @@ void *test() {
 	pthread_cond_destroy(&cv);
 }
 
+void *roll() {
+	int value = (rand() % 6) + 1;
+	int *result = malloc(sizeof(int));
+	*result = value;
+	return (void*) result;	// you can't return a reference to a local variable, will be deallocated 
+}
 
-
-/*void *timer() {
+void *timer() {
 	clock_t before, after;
         before = clock();       // this gets the number of clock ticks that have elapsed since the program was launched
         sleep(8);
         after = clock();
         double t1 = ( (double)(after-before) ) / CLOCKS_PER_SEC;
         printf("clock after: %f\n", t1);
-}*/
+}
