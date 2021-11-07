@@ -46,8 +46,9 @@ int main(int argc, char *argv[]) {
 }
 
 void *mutex_test() {
-	// obvious evolution of forever for loop is a queue
 	pthread_cond_init(&cv, NULL);
+	// TODO: Pause thread execution and giving it to another
+	// i need a variable that's specific to each thread if I wanna make a loop
 	//while(1) {
 		if(pthread_mutex_trylock(&mutex) == 0) {
 			pthread_mutex_lock(&mutex);
@@ -58,11 +59,7 @@ void *mutex_test() {
 			pthread_cond_signal(&cv);
         	} else {
 			printf("pausing other thread while waiting for mutex to be unlocked\n");
-			pthread_cond_wait(&cv, &mutex); // this will wait for a signal from another thread
-			// ^^^ Equivalent to:
-			// pthread_mutex_unlock(&mutex)
-			// wait for signal on cv
-			// pthread_mutex_lock(&mutex)
+			pthread_cond_wait(&cv, &mutex); // this will wait for a signal from another thead
 			printf("other thread has been resumed\n");
         	}
 	//}
