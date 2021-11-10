@@ -3,46 +3,65 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
-#include <time.h>
 #include <pthread.h>
 
 void *mutex_test();
 void *roll();
 void *timer();
+void *tls_values();
+void *do_stuff();
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
+pthread_key_t glob_var_key;
+
+// Theads have 3 states: running, ready, blocked
 
 int main(int argc, char *argv[]) {
-	// Processes are NOT the same as threads
-	// Processes are isolated and do not share emory with any other processes
-	// Thread is the segment of a process, which means a process can have multiple threads contained within one process
-	// Threads have 3 states: running, ready, blocked
-	// Threads do not isolate and share memory
-	
 	pthread_t th[2];
-	int *res;
+	pthread_key_create_(&global_var_key, NULL);
+
+	int *res = malloc(sizeof(int));
 	srand(time(NULL));
 
 	for(int i = 0; i < 2; i++) {
-		if(pthread_create(th + i, NULL, roll, NULL) != 0){
+		if(pthread_create(th + i, NULL, tls_values, NULL) != 0) {
 			perror("Failed to create thread\n");
 			return 1;
 		}
 		printf("Thread %d created\n", i);
 	}
 	for(int i = 0; i < 2; i++) {
-		//if(pthread_join(th[i], NULL) != 0) {
-		if(pthread_join(th[i], (void**) &res) != 0) {
-                        // pthread_join waits for the thread specified in the first arg to terminate
+		if(pthread_join(th[i], NULL) != 0) {
+		//if(pthread_join(th[i], (void**) &res) != 0) {
+			perror("Failed to join thread\n");
                         return 1;
                 }
-		printf("Result: %d\n", *res);
-		free(res);
+		//printf("Result: %d\n", *res);
+		//free(res);
 	}
-	
 	pthread_mutex_destroy(&mutex);
 	exit(0);
+}
+
+void *do_stuff() {
+	// get thread specific data
+        int* glob_spec_var = pthread_getspecific(glob_var_key);
+        printf("Thread %d before mod value is %d\n", (unsigned int) pthread_self(), *glob_spec_var);
+        *glob_spec_var += 1;
+        printf("Thread %d after mod value is %d\n", (unsigned int) pthread_self(), *glob_spec_var);
+}
+
+void *tls_values() {
+	int *p = malloc(sizeof(int));
+	*p = 1;
+	printf("Address of p for thread %d: %p\n", (unsigned int) pthread_self(), p);
+        pthread_setspecific(glob_var_key, p); // i think the only way this works is if glob_var_key is unique to each thread 
+	do_stuff();
+	do_stuff();
+	pthread_setspecific(glob_var_key, NULL); // why is this called? oh I think I'm clearing out the value associated with glob_var_key since I'm creating this var on the heap
+        free(p);
+        pthread_exit(NULL);
 }
 
 void *mutex_test() {
@@ -66,18 +85,3 @@ void *mutex_test() {
 	pthread_cond_destroy(&cv);
 }
 
-void *roll() {
-	int value = (rand() % 6) + 1;
-	int *result = malloc(sizeof(int));
-	*result = value;
-	return (void*) result;	// you can't return a reference to a local variable, will be deallocated 
-}
-
-void *timer() {
-	clock_t before, after;
-        before = clock();       // this gets the number of clock ticks that have elapsed since the program was launched
-        sleep(8);
-        after = clock();
-        double t1 = ( (double)(after-before) ) / CLOCKS_PER_SEC;
-        printf("clock after: %f\n", t1);
-}
