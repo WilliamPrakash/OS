@@ -14,13 +14,15 @@ void *initialize_thread();
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
-pthread_key_t glob_var_key;
+pthread_key_t glob_var_key;	// value to increment
+pthread_key_t glob_var_key_2;	// duplicate for comparison
 
 // Theads have 3 states: running, ready, blocked
 
 int main(int argc, char *argv[]) {
 	pthread_t th[2];
 	pthread_key_create(&glob_var_key, NULL);
+	pthread_key_create(&glob_var_key_2, NULL);
 
 	for(int i = 0; i < 2; i++) {
 		if(pthread_create(th + i, NULL, initialize_thread, NULL) != 0) {
@@ -41,34 +43,50 @@ int main(int argc, char *argv[]) {
 
 void *initialize_thread() {
 	int *tid = malloc(sizeof(int));
+
 	*tid = rand() % 10; // this doesn't guarantee duplicates
-	pthread_setspecific(glob_var_key, tid);
+	int* dup = malloc(sizeof(int));
+	*dup = *tid;
+	printf("tid for thread %ld: %d\n", pthread_self(), *tid);
+	pthread_setspecific(glob_var_key, tid);		// increment
+	pthread_setspecific(glob_var_key_2, dup);	// compare
+	//free(tid);
+	//free(dup);
 	mutex_test();
 	pthread_setspecific(glob_var_key, NULL);
+	pthread_setspecific(glob_var_key_2, NULL);
 	free(tid);
+	free(dup);
 	pthread_exit(NULL);
 }
 
 void *mutex_test() {
-	int* tid = pthread_getspecific(glob_var_key);
-	printf("unique thread value: %d\n", *tid);
+	//int* tid = pthread_getspecific(glob_var_key);
+	int* dup = pthread_getspecific(glob_var_key_2);
+	*dup = *dup + 3;
+	pthread_setspecific(glob_var_key_2, dup);
 	pthread_cond_init(&cv, NULL);
-	//while(1) {
-	//while(*tid != *tid + 1) {
-		if(pthread_mutex_trylock(&mutex) == 0) {
-			pthread_mutex_lock(&mutex);
-			printf("mutex has been locked\nPerforming a task for 3 seconds...\n");
+	
+	// THIS DOESN'T SWITCH THREADS
+	// it has one fully execute before releasing it to the other thread 
+	while(pthread_getspecific(glob_var_key) <= pthread_getspecific(glob_var_key_2) ) {
+		pthread_mutex_lock(&mutex);
+			printf("mutex has been locked, doing stuff\n");
 			sleep(3);
-			pthread_mutex_unlock(&mutex);
+			// increment
+			int* temp = pthread_getspecific(glob_var_key);
+			*temp = *temp + 1;
+			pthread_setspecific(glob_var_key, temp);
+			printf("glob_var_key for thread %ld: %d\n", pthread_self(), *temp);
+			
 			printf("unlocked\n");
 			pthread_cond_signal(&cv);
-			//*tid += 1;
-        	} else {
-			printf("pausing other thread while waiting for mutex to be unlocked\n");
-			pthread_cond_wait(&cv, &mutex); // this will wait for a signal from another thead
-			printf("other thread has been resumed\n");
-        	}
-	//}
+			pthread_mutex_unlock(&mutex);
+		pthread_cond_wait(&cv, &mutex);
+		printf("1 loop completed: \n");
+
+	}
+	printf("exiting while loop...\n");
 	pthread_cond_destroy(&cv);
 }
 
