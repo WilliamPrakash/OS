@@ -11,27 +11,32 @@ void *timer();
 void *tls_values();
 void *do_stuff();
 void *initialize_thread();
+void *force_thread_sleep();
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
 pthread_key_t glob_var_key;	// value to increment
 pthread_key_t glob_var_key_2;	// duplicate for comparison
 
-// Theads have 3 states: running, ready, blocked
+int thread_ct = 2;	// global count for thread-specific conditional checks
+unsigned long int tid_list[2] = {0,0};
 
 int main(int argc, char *argv[]) {
-	pthread_t th[2];
+	pthread_t th[thread_ct];
 	pthread_key_create(&glob_var_key, NULL);
 	pthread_key_create(&glob_var_key_2, NULL);
-
-	for(int i = 0; i < 2; i++) {
+	
+	for(int i = 0; i < thread_ct; i++) {
 		if(pthread_create(th + i, NULL, initialize_thread, NULL) != 0) {
 			perror("Failed to create thread\n");
 			return 1;
 		}
-		printf("Thread %d created\n", i);
+		/****	can't do this here, i think it's only adding main thread	****/
+		/*tid_list[i] = pthread_self();
+		printf("Thread %ld currently executing...\n", pthread_self());
+		printf("Thread %ld added to tid_list\n", tid_list[i]);*/
 	}
-	for(int i = 0; i < 2; i++) {
+	for(int i = 0; i < thread_ct; i++) {
 		if(pthread_join(th[i], NULL) != 0) {
 			perror("Failed to join thread\n");
                         return 1;
@@ -48,6 +53,14 @@ void *initialize_thread() {
 	int* dup = malloc(sizeof(int));
 	*dup = *tid;
 	printf("tid for thread %ld: %d\n", pthread_self(), *tid);
+	//
+	int i = 0;
+	while(tid_list[i] != 0) {
+		i++;
+	}
+	tid_list[i] = pthread_self();
+	printf("thread %ld added to tid_list\n", tid_list[i]);
+	
 	pthread_setspecific(glob_var_key, tid);		// increment
 	pthread_setspecific(glob_var_key_2, dup);	// compare
 	//free(tid);
@@ -60,6 +73,7 @@ void *initialize_thread() {
 	pthread_exit(NULL);
 }
 
+int indx = 0;
 void *mutex_test() {
 	//int* tid = pthread_getspecific(glob_var_key);
 	int* dup = pthread_getspecific(glob_var_key_2);
@@ -67,28 +81,39 @@ void *mutex_test() {
 	pthread_setspecific(glob_var_key_2, dup);
 	pthread_cond_init(&cv, NULL);
 	
-	// THIS DOESN'T SWITCH THREADS
-	// it has one fully execute before releasing it to the other thread 
 	while(pthread_getspecific(glob_var_key) <= pthread_getspecific(glob_var_key_2) ) {
-		pthread_mutex_lock(&mutex);
+		printf("value of indx before trylock: %d\n", indx);
+		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[indx]) ) {
 			printf("mutex has been locked, doing stuff\n");
+			/**  this will only work for two threads, need to use thread_ct  **/
+			printf("value of indx: %d\n", indx);
+			/*if(indx >= 1) {
+				printf("skjdgfa jysgdfgasjdfgs\n");
+				indx = 0;
+			} else {*/
+				indx = 1;
+			//}
 			sleep(3);
+
 			// increment
 			int* temp = pthread_getspecific(glob_var_key);
 			*temp = *temp + 1;
 			pthread_setspecific(glob_var_key, temp);
 			printf("glob_var_key for thread %ld: %d\n", pthread_self(), *temp);
-			
 			printf("unlocked\n");
 			pthread_cond_signal(&cv);
 			pthread_mutex_unlock(&mutex);
-		pthread_cond_wait(&cv, &mutex);
+		} else {
+			pthread_cond_wait(&cv, &mutex);
+			indx = 0;
+		}
 		printf("1 loop completed: \n");
-
 	}
 	printf("exiting while loop...\n");
 	pthread_cond_destroy(&cv);
 }
+
+
 
 
 
