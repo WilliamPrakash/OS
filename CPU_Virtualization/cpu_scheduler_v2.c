@@ -65,16 +65,16 @@ void *mutex_test() {
 	
 	// the two global variables set in initialize_thread() control how many loops a thread does
 	// what if a thread is done? it should be removed from the tid_list!!!!!!
+	
+	// NEW ISSUE: runs and switches correctly, but stops at some point and doesn't exit while loop
 
 	while(pthread_getspecific(glob_var_key) <= pthread_getspecific(glob_var_key_2) ) {
-		printf("value of indx before trylock: %d\n", *indx);
-		// maybe make two separate if checks, one for pthread_self and the next for mutex
+		printf("next tid to be run: %ld\n", tid_list[*indx]);
 		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx]) ) {
 			printf("mutex has been locked, doing stuff\n");
 			sleep(3);
 			if(*indx == 0) *indx = 1;
 			else if(*indx == 1) *indx = 0;
-			printf("value of indx after edits in mutex: %d\n", *indx);
 
 			// increment key
 			int* temp = pthread_getspecific(glob_var_key);
@@ -84,9 +84,7 @@ void *mutex_test() {
 			pthread_mutex_unlock(&mutex);
 		} else {
 			pthread_cond_wait(&cv, &mutex);
-			indx = 0;
 		}
-		//printf("1 loop completed: \n");
 	}
 	printf("exiting while loop...\n");
 	pthread_cond_destroy(&cv);
