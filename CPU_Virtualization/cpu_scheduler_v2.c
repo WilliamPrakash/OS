@@ -9,6 +9,8 @@ void *round_robin();
 void* initialize_thread(void *input);
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t check1;
 pthread_cond_t cv;
 pthread_key_t glob_var_key;	// value to increment
 pthread_key_t glob_var_key_2;	// duplicate for comparison
@@ -17,6 +19,7 @@ int thread_ct = 2;	// global count for thread-specific conditional checks
 unsigned long int tid_list[2] = {0,0};
 int *indx;
 int isFirst = 0;
+int chk = 0;
 struct thread_data {
 	int num;
 };
@@ -54,18 +57,29 @@ void* initialize_thread(void *input) {
 	int* dup = malloc(sizeof(int));
 	*dup = *inc + 3;
 	tid_list[info->num] = pthread_self();
+	chk += 1;
 	if(isFirst == 0) {
 		*indx = info->num;
 		isFirst += 1;
 	}
-
-	// each thread needs two values, one to increment, and a duplicate to compare
 	pthread_setspecific(glob_var_key, inc);		// increment
 	pthread_setspecific(glob_var_key_2, dup);	// compare
-	// running into an issue of which thread created above actually calls this round_robin function
-	/* before I call this, I need to make sure both threads are added to the tid_list*/
+	/* before I call round_robin, I need to make sure both threads are added to the tid_list*/
 	/* I'm running into an error where one thread starts execution of round_robin before the other even has a chance to call the function*/
-	/* ^^^ this messes up the check of tid_list[*indx], as if a thread is already checking that and the other thread hasn't added to this global variable, then it's checking against nothing*/
+	/* ^^^ this messes up the check of tid_list[*indx], cuase if a thread is already checking that and the other thread hasn't added to this global variable, then it's checking against nothing */
+	/*pthread_cond_init(&check1, NULL);
+	if(chk == 2) {
+		// don't wait
+		// signal??
+		//pthread_mutex_lock(&mutex);
+		pthread_cond_signal(&check1);
+		pthread_mutex_unlock(&mutex1);
+	} else {
+		printf("waiting...\n");
+		pthread_cond_wait(&check1, &mutex1);
+		printf("done waiting\n");
+	}*/
+	//printf("pthread_self(): %ld\n", pthread_self());
 	round_robin();
 	pthread_setspecific(glob_var_key, NULL);
 	pthread_setspecific(glob_var_key_2, NULL);
@@ -74,22 +88,22 @@ void* initialize_thread(void *input) {
 	pthread_exit(NULL);
 }
 
-/* this thread sometimes works, sometimes doesn't. I think I'm not checking the order of when threads are added to the tid_list*/
+
 void *round_robin() {
 	pthread_cond_init(&cv, NULL);
 	// what if a thread is done? it should be removed from the tid_list
 
-	// this might not check values but rather memory address locations
-	while(pthread_getspecific(glob_var_key) <= pthread_getspecific(glob_var_key_2) ) {
-		printf("next tid to be run: %ld\n", tid_list[*indx]);
-		//printf("glob_var_key: %p, glob_var_key_2: %p\n", pthread_getspecific(glob_var_key), pthread_getspecific(glob_var_key_2));
+	int *temp = pthread_getspecific(glob_var_key);
+	int *temp1 = pthread_getspecific(glob_var_key_2);
+	// I think I need to move this check to the inside
+	while(*temp <= *temp1 ) {
+		printf("tid_list 1: %ld tid_list 2: %ld\n", tid_list[0], tid_list[1]);
 		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx]) ) {
 			printf("thread in mutex: %ld\n", pthread_self());
 			printf("mutex has been locked, doing stuff\n");
 			sleep(3);
 			if(*indx == 0) *indx = 1;
 			else if(*indx == 1) *indx = 0;
-			printf("new value of *indx: %d\n", *indx);
 
 			// increment key
 			int* temp = pthread_getspecific(glob_var_key);
