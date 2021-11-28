@@ -64,22 +64,6 @@ void* initialize_thread(void *input) {
 	}
 	pthread_setspecific(glob_var_key, inc);		// increment
 	pthread_setspecific(glob_var_key_2, dup);	// compare
-	/* before I call round_robin, I need to make sure both threads are added to the tid_list*/
-	/* I'm running into an error where one thread starts execution of round_robin before the other even has a chance to call the function*/
-	/* ^^^ this messes up the check of tid_list[*indx], cuase if a thread is already checking that and the other thread hasn't added to this global variable, then it's checking against nothing */
-	/*pthread_cond_init(&check1, NULL);
-	if(chk == 2) {
-		// don't wait
-		// signal??
-		//pthread_mutex_lock(&mutex);
-		pthread_cond_signal(&check1);
-		pthread_mutex_unlock(&mutex1);
-	} else {
-		printf("waiting...\n");
-		pthread_cond_wait(&check1, &mutex1);
-		printf("done waiting\n");
-	}*/
-	//printf("pthread_self(): %ld\n", pthread_self());
 	round_robin();
 	pthread_setspecific(glob_var_key, NULL);
 	pthread_setspecific(glob_var_key_2, NULL);
@@ -97,7 +81,7 @@ void *round_robin() {
 	int *temp1 = pthread_getspecific(glob_var_key_2);
 	// I think I need to move this check to the inside
 	while(*temp <= *temp1 ) {
-		printf("tid_list 1: %ld tid_list 2: %ld\n", tid_list[0], tid_list[1]);
+		printf("tid_list[*indx]: %ld    pthread_self(): %ld\n", tid_list[*indx], pthread_self());
 		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx]) ) {
 			printf("thread in mutex: %ld\n", pthread_self());
 			printf("mutex has been locked, doing stuff\n");
@@ -109,9 +93,12 @@ void *round_robin() {
 			int* temp = pthread_getspecific(glob_var_key);
 			*temp = *temp + 1;
 			pthread_setspecific(glob_var_key, temp);
-			pthread_cond_signal(&cv);
+			//pthread_cond_signal(&cv);
+			//
 			pthread_mutex_unlock(&mutex);
+			pthread_cond_signal(&cv);
 		} else {
+			printf("pthread that's currently waiting: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
 		}
 	}
