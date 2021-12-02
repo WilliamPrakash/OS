@@ -12,6 +12,7 @@ void* initialize_thread(void *input);
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
+pthread_cond_t cv1;
 pthread_key_t glob_var_key;	// value to increment
 pthread_key_t glob_var_key_2;	// duplicate for comparison
 bool oneThread = false;
@@ -59,6 +60,13 @@ void* initialize_thread(void *input) {
 	tid_list[info->num] = pthread_self();
 	pthread_setspecific(glob_var_key, inc);		// increment
 	pthread_setspecific(glob_var_key_2, dup);	// compare
+	pthread_cond_init(&cv1, NULL);
+	if(info->num != 0) {
+		pthread_cond_wait(&cv1, &mutex1);
+	}
+	pthread_mutex_unlock(&mutex1);
+	pthread_cond_signal(&cv1);
+	pthread_cond_destroy(&cv1);
 	// i think this only works if the second thread gets there first and immediately goes into waiting
 	// actually, I think the way it's written, I need the first thread to execute first always
 	// so I have two options, 
@@ -80,17 +88,13 @@ void *round_robin() {
 	// I think I need to move this check to the inside
 	while(*temp <= *temp1 ) {
 		printf("tid_list[*indx]: %ld    pthread_self(): %ld\n", tid_list[*indx], pthread_self());
-		oneThread = pthread_self() == tid_list[*indx];
-		printf("self = tid_list ? %d\n", oneThread);
-		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx])) {
-			//pthread_mutex_lock(&mutex);
+		//oneThread = pthread_self() == tid_list[*indx];
+		//printf("self = tid_list ? %d\n", oneThread);
+		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx] )) {
 			printf("thread in mutex: %ld\n", pthread_self());
 			printf("mutex has been locked, doing stuff\n");
-			//sleep(3);
-			//if(oneThread != true) {
-				if(*indx == 0) *indx = 1;
-				else if(*indx == 1) *indx = 0;
-			//}
+			if(*indx == 0) *indx = 1;
+			else if(*indx == 1) *indx = 0;
 
 			// increment key
 			sleep(3);
@@ -99,9 +103,10 @@ void *round_robin() {
 			pthread_setspecific(glob_var_key, temp);
 			pthread_mutex_unlock(&mutex);
 			pthread_cond_signal(&cv);
-		} else if (pthread_mutex_trylock(&mutex) != 0) {
+		} else {
 			printf("pthread that's currently waiting: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
+			printf("thread %ld awakened\n", pthread_self());
 		}
 	}
 	printf("exiting while loop...\n");
