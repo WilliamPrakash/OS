@@ -13,7 +13,6 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
 pthread_key_t glob_var_key;	// value to increment
 pthread_key_t glob_var_key_2;	// duplicate for comparison
-bool oneThread = false;
 
 int thread_ct = 2;	// global count for thread-specific conditional checks
 unsigned long int tid_list[2] = {0,0};
@@ -24,13 +23,13 @@ struct thread_data {
 
 
 int main(int argc, char *argv[]) {
-	fflush(stdout);
+	//fflush(stdout);
 	pthread_t th[thread_ct];
 	pthread_key_create(&glob_var_key, NULL);
 	pthread_key_create(&glob_var_key_2, NULL);
 	indx = malloc(sizeof(int));
 	*indx = 0;
-	struct thread_data *info;
+	struct thread_data *info; 
 	for(int i = 0; i < thread_ct; i++) {
 		info = malloc(sizeof(struct thread_data));
 		info->num = i;
@@ -96,12 +95,9 @@ void *round_robin() {
 		} else {
 			printf("pthread that's currently waiting: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
-			//printf("thread %ld awakened\n", pthread_self());
 		}
-		pthread_cond_signal(&cv);
 	}
 	printf("exiting while loop...\n");
-	//oneThread = true;
 	pthread_cond_destroy(&cv);
 }
 
