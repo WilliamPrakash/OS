@@ -78,8 +78,14 @@ void *round_robin() {
 	int *temp1 = pthread_getspecific(glob_var_key_2);
 	// I think I need to move this check to the inside
 	while(*temp <= *temp1 ) {
+		//printf("temp: %d       temp1: %d\n", *temp, *temp1); // used this to check and see if maybe the thread was exiting and freezing the other variable. This turned out to be a problem some of the time, but not all...
 		printf("tid_list[*indx]: %ld    pthread_self(): %ld\n", tid_list[*indx], pthread_self());
-		if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx] )) {
+		
+		//if( (pthread_mutex_trylock(&mutex) == 0) && (pthread_self() == tid_list[*indx] )) {
+		//printf("--asdf--\n"); // make sure a thread isn't endlessly looping
+		if(pthread_self() == tid_list[*indx]) {
+			// set a wait here for when the mutex is actually unlocked
+			pthread_mutex_lock(&mutex);
 			printf("thread in mutex: %ld\n", pthread_self());
 			printf("mutex has been locked, doing stuff\n");
 			if(*indx == 0) *indx = 1;
@@ -93,6 +99,8 @@ void *round_robin() {
 			pthread_mutex_unlock(&mutex);
 			pthread_cond_signal(&cv);
 		} else {
+			// what if I try unlocking the mutex here to make sure it's unlocked??
+			pthread_mutex_unlock(&mutex);
 			printf("pthread that's currently waiting: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
 		}
