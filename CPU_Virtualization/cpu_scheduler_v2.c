@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 void *round_robin();
+
 void* initialize_thread(void *input);
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -26,7 +27,6 @@ int main(int argc, char *argv[]) {
 	//fflush(stdout);
 	pthread_t th[thread_ct];
 	pthread_key_create(&glob_var_key, NULL);
-	pthread_key_create(&glob_var_key_2, NULL);
 	indx = malloc(sizeof(int));
 	*indx = 0;
 	struct thread_data *info; 
