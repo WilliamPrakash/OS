@@ -8,14 +8,16 @@
 
 void *simple_switcher();
 void* initialize_thread();
+void* clean();
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
 
-//int *indx = 0;
+int inc = 0;
 long unsigned int pidList[2] = {0,0};
 
 int main(int argc, char *argv[]) {
+	//clean();
 	pthread_t threads[2];
 	for(int i = 0; i < 2; i++) {
 		if(pthread_create(&threads[i], NULL, initialize_thread, NULL) != 0) {
@@ -40,12 +42,13 @@ void* initialize_thread() {
 
 void *simple_switcher() {
 	pthread_cond_init(&cv, NULL);
-	int inc = 0;
 	int i = 0;
 	while(pidList[i] != 0) i++;
 	pidList[i] = pthread_self();
+	// if I pause one thread here till the other thread comes, then I can ensure the correct thread execution order
+	// would also require either using condition variable cv, or making a new one...
 	while(inc < 3) {
-		if(pthread_mutex_trylock(&mutex) == 0 && pthread_self() == pidList[i]) {
+		if(pthread_self() == pidList[i] && pthread_mutex_trylock(&mutex) == 0) {
 			printf("mutex has been locked by: %ld\n", pthread_self());
 			int check = pthread_mutex_trylock(&mutex);
 			if (i == 0) i = 1;
@@ -62,9 +65,12 @@ void *simple_switcher() {
 		}
 	}
 	printf("exiting while loop...\n");
-	//pthread_cond_destroy(&cv);
+	pthread_cond_destroy(&cv);
 }
 
+void* clean() {
+	pthread_cond_destroy(&cv);
+}
 
 /*void* initialize_thread() {
         int num;
