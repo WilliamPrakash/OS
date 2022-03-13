@@ -14,6 +14,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
 
 int inc = 0;
+int i = 0;
 long unsigned int pidList[2] = {0,0};
 
 int main(int argc, char *argv[]) {
@@ -37,40 +38,41 @@ int main(int argc, char *argv[]) {
 
 void* initialize_thread() {
 	simple_switcher();
-	pthread_exit(NULL);
+	//pthread_exit(NULL);
 }
 
 void *simple_switcher() {
 	pthread_cond_init(&cv, NULL);
-	int i = 0;
 	while(pidList[i] != 0) i++;
 	pidList[i] = pthread_self();
-	// if I pause one thread here till the other thread comes, then I can ensure the correct thread execution order
-	// would also require either using condition variable cv, or making a new one...
+	i = 0;
 	while(inc < 3) {
+		printf("pidList[i]: %ld\n", pidList[i]);
 		if(pthread_self() == pidList[i] && pthread_mutex_trylock(&mutex) == 0) {
-			printf("mutex has been locked by: %ld\n", pthread_self());
-			int check = pthread_mutex_trylock(&mutex);
 			if (i == 0) i = 1;
 			else if (i == 1) i = 0;
+			printf("mutex has been locked by: %ld\n", pthread_self());
+			int check = pthread_mutex_trylock(&mutex);
+			// OH! I think i isn't being changed quick enough, so the other thread is checking a "stale" i value, resulting in the else condition not working
+			// I could signal the other thread here with yet another condition variable to let it know the i is updated
 			inc++;
 			sleep(3);
 			pthread_cond_signal(&cv);
-			//sleep(3); // i think this thread was going too fast, and hogging the mutex
 			pthread_mutex_unlock(&mutex);
-		} else {
+		} else { 
 			printf("thread waiting on condition signal: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
 			printf("signaled\n");
 		}
 	}
 	printf("exiting while loop...\n");
-	pthread_cond_destroy(&cv);
+	clean();
 }
 
 void* clean() {
 	pthread_cond_destroy(&cv);
 }
+
 
 /*void* initialize_thread() {
         int num;
