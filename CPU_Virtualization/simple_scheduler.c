@@ -12,6 +12,7 @@ void* clean();
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cv;
+pthread_cond_t cv1;
 
 int inc = 0;
 int i = 0;
@@ -43,23 +44,30 @@ void* initialize_thread() {
 
 void *simple_switcher() {
 	pthread_cond_init(&cv, NULL);
+	pthread_cond_init(&cv1, NULL);
 	while(pidList[i] != 0) i++;
 	pidList[i] = pthread_self();
 	i = 0;
 	while(inc < 3) {
 		printf("pidList[i]: %ld\n", pidList[i]);
-		if(pthread_self() == pidList[i] && pthread_mutex_trylock(&mutex) == 0) {
+		// the correct thread should enter the if condition, regardless of mutex unlocked status
+		if(pthread_self() == pidList[i]) {
 			if (i == 0) i = 1;
-			else if (i == 1) i = 0;
+                        else if (i == 1) i = 0;
+			// if the mutex is locked, wait till it's unlocked
+			if(pthread_mutex_trylock(&mutex) != 0) { 
+				pthread_cond_wait(&cv1, &mutex);
+			}
 			printf("mutex has been locked by: %ld\n", pthread_self());
 			int check = pthread_mutex_trylock(&mutex);
 			// OH! I think i isn't being changed quick enough, so the other thread is checking a "stale" i value, resulting in the else condition not working
-			// I could signal the other thread here with yet another condition variable to let it know the i is updated
 			inc++;
 			sleep(3);
 			pthread_cond_signal(&cv);
+			pthread_cond_signal(&cv1);
 			pthread_mutex_unlock(&mutex);
-		} else { 
+		} else {
+			//pthread_cond_signal(&cv);
 			printf("thread waiting on condition signal: %ld\n", pthread_self());
 			pthread_cond_wait(&cv, &mutex);
 			printf("signaled\n");
