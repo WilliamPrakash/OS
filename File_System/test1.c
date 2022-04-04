@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "fs.h"
+#include "fs.c"
 
 void main() {
 	create_fs();
