@@ -9,14 +9,12 @@ struct superblock {
 
 struct inode {
 	int size;
-	int first_block;
 	char name[8];
+	int first_block;
 };
 
 // each block will be bigger than 512 bytes, cause each block has a next block pointer
 struct disk_block {
-	// if we're using an int as the next block num, don't we need a variable to keep track
-	// of what block this one is?
 	int next_block_num;
 	char data[512];
 };
@@ -27,4 +25,13 @@ void sync_fs ();   // write the file system
 int allocate_file(char name[8]); // return filenumber
 void print_fs();   // print out info about the filesystem
 
+
+
+/*
+- Before you can access the files on a file system, you need to mount the file system
+- Mounting a file system attaches that file system to a directory (mount point) and makes it available to the system
+- The root (/) file system is always mounted
+- Any other file system can be connected or disconnected from the root file system
+
+*/
 

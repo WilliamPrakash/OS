@@ -4,8 +4,11 @@
 #include <string.h>
 
 struct superblock sb;
-struct inode *inodes;
+struct inode *inodes; // Each file has an inode associated with it. It links all the data blocks to the file
 struct disk_block *dsk_blks;
+
+int find_empty_inode();
+int find_empty_block();
 
 void create_fs() {
 	// setup superblock
@@ -68,6 +71,7 @@ void print_fs() {
 	for(i = 0; i < sb.num_inodes; i++) {
 		printf("\tsize: %d   first block: %d   name: %s\n", inodes[i].size, inodes[i].first_block, inodes[i].name);
 	}
+	printf("blocks:\n");
 	for(i = 0; i < sb.num_blocks; i++) {
 		printf("\tblock num: %d next block %d\n", i, dsk_blks[i].next_block_num);
 	}
@@ -76,8 +80,57 @@ void print_fs() {
 
 
 int allocate_file(char name[8]) {
+	/* Every file has an inode associated with it */
+	// find an empty inode + disk block for the new file you're gonna create
+	int inode_indx = find_empty_inode();
+	int block_indx = find_empty_block();
+	// claim them
+	inodes[inode_indx].first_block = block_indx;
+	dsk_blks[block_indx].next_block_num = -2;
+	strcpy(inodes[inode_indx].name, name);
 
+	return inode_indx;
 }
+	
+
+int find_empty_inode() {
+	int i;
+	for(i = 0; i < sb.num_inodes; i++) {
+		if(inodes[i].first_block == -1) { return i; }
+	}
+	return -1;
+}
+
+int find_empty_block() {
+	int i;
+	for(i = 0; i <sb.num_blocks; i++) {
+		if(dsk_blks[i].next_block_num == -1) { return i; }
+	}
+	return -1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
